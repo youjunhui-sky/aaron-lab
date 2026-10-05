@@ -1,0 +1,4 @@
+# runtime artifacts
+.venv/
+data/
+*.sqlite3

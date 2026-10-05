@@ -1,0 +1,7 @@
+# runtime
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.2
+email-validator>=2.1
+python-multipart>=0.0.9
