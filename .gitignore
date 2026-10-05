@@ -1,0 +1,15 @@
+# secrets first — never commit
+.env
+.env.*
+*.key
+*.pem
+secrets*
+credentials*
+
+# deps & builds
+node_modules/
+__pycache__/
+dist/
+build/
+*.log
+.DS_Store
