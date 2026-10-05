@@ -2,3 +2,6 @@
 .venv/
 data/
 *.sqlite3
+
+# but DO ship the example config (root .gitignore's .env.* would otherwise eat it)
+!.env.example
