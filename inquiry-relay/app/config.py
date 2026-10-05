@@ -6,6 +6,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+CANONICAL_FIELDS = ("name", "email", "message", "lang", "source_page")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -32,16 +34,32 @@ class Settings(BaseSettings):
     # empty = canonical names only; canonical names still work as fallback for unmapped keys
     field_map: str = ""
 
-    def get_field_map(self) -> dict[str, str]:
-        if not self.field_map.strip():
-            return {}
-        try:
-            parsed = json.loads(self.field_map)
-        except json.JSONDecodeError:
-            return {}
-        if not isinstance(parsed, dict):
-            return {}
-        return {str(k): str(v) for k, v in parsed.items() if v}
+    # --- IM push (D3) ---
+    # feishu custom bot webhook (preferred); telegram needs token+chat; slack webhook
+    feishu_webhook_url: str = ""
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+    slack_webhook_url: str = ""
+    # push duplicates too? default off — duplicates are logged, not announced
+    push_duplicates: bool = False
+
+    # --- retry worker (D3) ---
+    queue_poll_seconds: float = 5.0
+    queue_enabled: bool = True
+
+
+def get_field_map(settings: "Settings") -> dict[str, str]:
+    """Parse the field_map JSON (canonical -> incoming). Bad/empty config => {}."""
+    raw = getattr(settings, "field_map", "")
+    if not raw or not raw.strip():
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(parsed, dict):
+        return {}
+    return {str(k): str(v) for k, v in parsed.items() if v}
 
 
 @lru_cache

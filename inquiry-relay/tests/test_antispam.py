@@ -206,7 +206,9 @@ def test_duplicate_outside_window_not_marked(tmp_path, monkeypatch):
 def test_d1_healthz_still_ok(client):
     r = client.get("/healthz")
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "db": True}
+    body = r.json()
+    assert body["ok"] is True and body["db"] is True
+    assert isinstance(body.get("queue"), dict)  # D3: queue stats included
 
 
 def test_d1_missing_message_still_422(client):
