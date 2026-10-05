@@ -25,19 +25,22 @@ CREATE INDEX IF NOT EXISTS idx_inquiries_email_created
     ON inquiries (email, created_at);
 """
 
-_thread_local = threading.local()
+_conns: dict[str, sqlite3.Connection] = {}
+_conns_lock = threading.Lock()
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
-    """One connection per thread; WAL keeps readers and the writer from blocking."""
-    conn = getattr(_thread_local, "conn", None)
-    if conn is None:
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(db_path, timeout=10)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=10000")
-        _thread_local.conn = conn
+    """One connection per resolved path; WAL keeps readers and the writer from blocking."""
+    key = str(db_path.resolve())
+    with _conns_lock:
+        conn = _conns.get(key)
+        if conn is None:
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            conn = sqlite3.connect(db_path, timeout=10, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA busy_timeout=10000")
+            _conns[key] = conn
     return conn
 
 

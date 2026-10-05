@@ -8,8 +8,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field, ValidationError
 
 from .antispam import honeypot_hit, rate_limited, verify_turnstile
-from .config import Settings, get_settings
+from .config import CANONICAL_FIELDS, Settings, get_field_map, get_settings
 from .db import find_duplicate, insert_inquiry
+from .push import build_targets
+from .queue import enqueue
 
 log = logging.getLogger("inquiry")
 
@@ -43,7 +45,7 @@ def map_fields(incoming: dict, settings: Settings) -> dict:
     Map: canonical -> incoming name ({"email": "mail"} reads request field "mail").
     Canonical names still work for keys the map doesn't cover.
     """
-    field_map = settings.get_field_map()
+    field_map = get_field_map(settings)
     mapped: dict = {}
     for canonical in CANONICAL_FIELDS:
         incoming_name = field_map.get(canonical, canonical)
@@ -153,6 +155,22 @@ async def submit_inquiry(
     except Exception:
         log.exception("failed to persist inquiry")
         return _error(500, "storage_error", "failed to persist inquiry")
+
+    # --- enqueue IM push (all configured channels); failures retry with backoff ---
+    if status == "received" or settings.push_duplicates:
+        enqueue(
+            settings.db_path,
+            inquiry_id,
+            build_targets(settings),
+            {
+                "name": payload.name,
+                "email": payload.email,
+                "message": payload.message,
+                "lang": payload.lang,
+                "source_page": payload.source_page,
+                "status": status,
+            },
+        )
 
     return JSONResponse(
         status_code=202,
