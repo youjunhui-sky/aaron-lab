@@ -27,13 +27,35 @@ cd aaron-lab/inquiry-relay
 sudo ./install.sh                 # venv + deps + self-test + systemd service
 ```
 
-Then the only required edit — your Feishu bot webhook:
+Then the only required edit — your IM webhook
+(don't have one yet? see **[Get a webhook](#get-a-webhook)** below):
 
 ```bash
 sudo nano /opt/inquiry-relay/.env         # set INQUIRY_FEISHU_WEBHOOK_URL=...
 sudo systemctl restart inquiry-relay
 curl localhost:8000/healthz               # {"ok":true,"db":true,...}
 ```
+
+## Get a webhook
+
+No IM webhook yet? Pick a channel, ~2 minutes each:
+
+**Feishu / Lark** (preferred)
+1. Open the target group → ⚙ Settings → Bots (群机器人) → Add Robot → **Custom Bot**
+2. Name it, confirm, copy the webhook URL (`https://open.feishu.cn/open-apis/bot/v2/hook/...`)
+3. Put the **full URL** into `INQUIRY_FEISHU_WEBHOOK_URL`
+
+**Telegram**
+1. Message **@BotFather** → `/newbot` → copy the bot token
+2. Add the bot to your group, then find the chat id: `curl https://api.telegram.org/bot<TOKEN>/getUpdates` and look for `"chat":{"id":...}`
+3. Set `INQUIRY_TELEGRAM_BOT_TOKEN` + `INQUIRY_TELEGRAM_CHAT_ID`
+
+**Slack**
+1. Create a Slack app → enable **Incoming Webhooks** → add a webhook for your channel
+2. Put the URL into `INQUIRY_SLACK_WEBHOOK_URL`
+
+All channels empty? The service still accepts and stores inquiries
+(`status: "received"`) — it just won't push anywhere until you configure one.
 
 Prefer running by hand (no root / no systemd)? Use `--no-service` and run:
 
