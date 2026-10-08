@@ -6,7 +6,7 @@ I build small, self-hosted tools in the open. **Every project runs as a public i
 
 ## What lives here
 
-- Mini tools — usually single-container, zero-fuss, `docker run` to start
+- Mini tools — self-hosted, zero-fuss, plain venv + systemd to start (no Docker by design)
 - Desensitized, self-owned rebuilds of patterns I ship in real client work — **no client data, ever**
 - Honest build logs, including what broke
 
