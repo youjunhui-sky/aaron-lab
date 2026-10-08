@@ -20,7 +20,7 @@ I build small, self-hosted tools in the open. **Every project runs as a public i
 
 | # | Project | Status |
 |---|---|---|
-| 001 | Inquiry webhook — form → anti-spam → IM push | 🚧 in progress |
+| 001 | Inquiry webhook — form → anti-spam → IM push | ✅ delivered ([Issue #1](https://github.com/youjunhui-sky/aaron-lab/issues/1)) |
 
 ## Find me
 
